@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orientación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        #circulo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #3498db;
+            position: absolute;
+        }
+
+        #boton {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button id="boton">Activar Orientación</button>
+    <div id="circulo"></div>
+
+    <script>
+        const circulo = document.getElementById('circulo');
+        const boton = document.getElementById('boton');
+
+        // Variables para suavizar el movimiento
+        let posX = 0;
+        let posY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        function handleOrientation(event) {
+            let beta = event.beta;   // Inclinación adelante/atrás [-180 a 180]
+            let gamma = event.gamma; // Inclinación izquierda/derecha [-90 a 90]
+
+            // Limito los grados a 90 para que no se vuelva loco si giro el móvil
+            if (beta > 90) beta = 90;
+            if (beta < -90) beta = -90;
+            if (gamma > 90) gamma = 90;
+            if (gamma < -90) gamma = -90;
+
+            // Calculamos el espacio disponible en la pantalla (mitad del ancho/alto menos el radio del círculo)
+            const maxX = (window.innerWidth / 2) - 50;
+            const maxY = (window.innerHeight / 2) - 50;
+
+            // Mapeamos los grados a píxeles
+            targetX = (gamma / 90) * maxX;
+            targetY = (beta / 90) * maxY;
+        }
+
+        function animar() {
+            posX += (targetX - posX);
+            posY += (targetY - posY);
+
+            // uso transform para mover el círculo
+            circulo.style.transform = `translate(${posX}px, ${posY}px)`;
+            
+            // vuelvo a llamarlo para que se siga moviendo
+            requestAnimationFrame(animar);
+        }
+
+        function onClick() { 
+            if (typeof DeviceMotionEvent.requestPermission === 'function') { 
+                // Manejar dispositivos iOS 13+. 
+                DeviceMotionEvent.requestPermission() 
+                .then((state) => { 
+                    if (state === 'granted') { 
+                    window.addEventListener('devicemotion', handleOrientation); 
+                    } else { 
+                    console.error('La solicitud para acceder a la orientación fue rechazada'); 
+                    } 
+                }) 
+                .catch(console.error); 
+            } else { 
+                // Manejar dispositivos normales que no son iOS 13+. 
+                window.addEventListener('devicemotion', handleOrientation); 
+            } 
+        }
+
+        boton.addEventListener('click', onClick);
+    </script>
+</body>
+
+</html>
